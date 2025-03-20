@@ -60,8 +60,7 @@ gen-ai_call-insight-extractor/
 │   │   └── secrets.toml_setup
 │   └── streamlit_app.py
 ├── .gitignore
-├── README.md
-└── run.sh
+└── README.md
 ```
 
 ## Running the Application Locally
