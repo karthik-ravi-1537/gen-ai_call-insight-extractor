@@ -17,6 +17,7 @@ class PaymentCurrency(enum.Enum):
     GBP = "GBP"
     JPY = "JPY"
     AUD = "AUD"
+    OTHER = "Other"
 
 
 class CallStatus(enum.Enum):
@@ -24,3 +25,13 @@ class CallStatus(enum.Enum):
     PROCESSING = "Processing"
     PROCESSED = "Processed"
     PROCESSING_FAILED = "Processing Failed"
+
+
+class PaymentMethod(enum.Enum):
+    CREDIT_CARD = "Credit Card"
+    DEBIT_CARD = "Debit Card"
+    ACH = "ACH"
+    CHECK = "Check"
+    CASH = "Cash"
+    WIRE_TRANSFER = "Wire Transfer"
+    OTHER = "Other"

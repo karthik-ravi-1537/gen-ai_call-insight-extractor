@@ -1,6 +1,6 @@
 # services/transcript_service.py
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import llm_client
 from models.insight import Insight
@@ -29,7 +29,7 @@ def redo_transcript_summary(db: Session, transcript_id: str) -> Insight:
     llm = llm_client
     llm_data = llm.process_transcript(transcript.transcript_text)
     insight.summary_text = llm_data.get("summary_text")
-    insight.llm_summary_updated_at = datetime.utcnow()
+    insight.llm_summary_updated_at = datetime.now(timezone.utc)
     insight.llm_redo_required = False
     insight.llm_retry_count += 1
     db.commit()
