@@ -9,30 +9,53 @@ API_URL = BACKEND_URL + st.secrets.get("API_PREFIX", "/api/v1")
 
 st.title("Gen-AI Call Insight Extractor")
 
-st.markdown("## Upload Transcript Files")
+st.markdown("## Upload Transcript File(s)")
 
-uploaded_files = st.file_uploader("Select the transcript file (TXT)", type=["txt"],
-                                  accept_multiple_files=False)  # False to allow only one file at a time. BE support Multiple Files, but restricting for testing.
+uploaded_file = st.file_uploader(
+    "Select the transcript file (TXT)",
+    type=["txt"],
+    accept_multiple_files=False  # Only one file allowed at a time
+)
 
 if st.button("Upload Call"):
-    if not uploaded_files:
-        st.warning("No files selected. Please upload at least one file.")
+    if not uploaded_file:
+        st.warning("No file selected. Please upload a file.")
     else:
-        # Prepare files for upload
-        files = []
-        for file in uploaded_files:
-            files.append(
-                ("files", (file.name, file.getvalue(), "text/plain"))
-            )
+        files = [
+            ("files", (uploaded_file.name, uploaded_file.getvalue(), "text/plain"))
+        ]
         try:
             response = requests.post(f"{API_URL}/apis/calls/upload_call", files=files)
             if response.status_code == 200:
                 data = response.json()
-                st.success(f"Upload successful!")
+                st.success("Upload successful!")
             else:
                 st.error(f"Upload failed with status code {response.status_code}")
         except Exception as e:
-            st.error(f"Error uploading files: {e}")
+            st.error(f"Error uploading file: {e}")
+
+# uploaded_files = st.file_uploader("Select one or more transcript files (TXT)", type=["txt"],
+#                                   accept_multiple_files=True)
+#
+# if st.button("Upload Call"):
+#     if not uploaded_files:
+#         st.warning("No files selected. Please upload at least one file.")
+#     else:
+#         # Prepare files for upload
+#         files = []
+#         for file in uploaded_files:
+#             files.append(
+#                 ("files", (file.name, file.getvalue(), "text/plain"))
+#             )
+#         try:
+#             response = requests.post(f"{API_URL}/apis/calls/upload_call", files=files)
+#             if response.status_code == 200:
+#                 data = response.json()
+#                 st.success(f"Upload successful!")
+#             else:
+#                 st.error(f"Upload failed with status code {response.status_code}")
+#         except Exception as e:
+#             st.error(f"Error uploading files: {e}")
 
 st.markdown("## Call Summaries")
 
