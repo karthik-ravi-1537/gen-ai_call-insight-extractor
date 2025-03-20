@@ -50,7 +50,9 @@ gen-ai_call-insight-extractor/
 │   │   ├── App.js
 │   │   └── index.js
 │   ├── setup/
-│   │   └── .env_setup
+│   │   ├── .env_setup
+│   │   ├── sample_transcript_1.txt
+│   │   └── ...
 │   ├── package.json
 │   └── package-lock.json
 ├── streamlit/
