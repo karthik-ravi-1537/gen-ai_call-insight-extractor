@@ -17,7 +17,7 @@ uploaded_file = st.file_uploader(
     accept_multiple_files=False  # Only one file allowed at a time
 )
 
-if st.button("Upload Call"):
+if st.button("Upload Call Transcript(s)"):
     if not uploaded_file:
         st.warning("No file selected. Please upload a file.")
     else:
@@ -59,7 +59,7 @@ if st.button("Upload Call"):
 
 st.markdown("## Call Summaries")
 
-if st.button("Refresh Summaries"):
+if st.button("Retrieve Summaries"):
     try:
         response = requests.get(f"{API_URL}/apis/calls/summaries")
         if response.status_code == 200:
