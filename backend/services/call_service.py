@@ -20,7 +20,7 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
     if not call:
         raise Exception("Call not found")
 
-    call.call_status = CallStatus.processing
+    call.call_status = CallStatus.PROCESSING
     db.commit()
 
     for transcript in call.transcripts:
@@ -68,7 +68,7 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
         else:
             call.processed_summary = "No transcript insights available."
 
-    call.call_status = CallStatus.processed
+    call.call_status = CallStatus.PROCESSED
     db.commit()
     return call
 

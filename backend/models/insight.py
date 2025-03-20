@@ -16,9 +16,9 @@ class Insight(Base, AuditMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     transcript_id = Column(UUID(as_uuid=True), ForeignKey("transcripts.id"), nullable=False, unique=True)
 
-    payment_status = Column(Enum(PaymentStatus), nullable=False)
-    payment_amount = Column(Numeric(10, 2), nullable=True)
-    payment_currency = Column(Enum(PaymentCurrency), nullable=False, default=PaymentCurrency.usd)
+    payment_status = Column(Enum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING)
+    payment_amount = Column(Numeric(10, 2), nullable=True, default=0.0)
+    payment_currency = Column(Enum(PaymentCurrency), nullable=False, default=PaymentCurrency.USD)
     payment_date = Column(Date, nullable=True)
     payment_method = Column(String, nullable=True)
 
