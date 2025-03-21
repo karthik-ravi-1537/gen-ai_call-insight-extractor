@@ -1,9 +1,0 @@
-Agent: Good morning, this is John calling from XYZ Collections. May I speak with Mr. Smith?
-Customer: Yes, this is Mr. Smith.
-Agent: Mr. Smith, I'm calling regarding your outstanding balance of $250.00. Have you made any payments recently?
-Customer: No, I haven't paid yet, but I plan to pay soon.
-Agent: I understand. Could you confirm if you will be making a payment today, or do you plan on scheduling one for a later date?
-Customer: I intend to make a payment later today after my lunch.
-Agent: Thank you, Mr. Smith. May I confirm that you'll be using a credit card for this payment?
-Customer: Yes, I'll be using my credit card.
-Agent: Great, we have noted that a payment is committed for later today via credit card. Thank you for your time, Mr. Smith.

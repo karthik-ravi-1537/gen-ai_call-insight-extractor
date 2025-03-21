@@ -50,15 +50,15 @@ gen-ai_call-insight-extractor/
 │   │   ├── App.js
 │   │   └── index.js
 │   ├── setup/
-│   │   ├── .env_setup
-│   │   ├── sample_transcript_1.txt
-│   │   └── ...
+│   │   └── .env_setup
 │   ├── package.json
 │   └── package-lock.json
 ├── streamlit/
 │   ├── .streamlit/
 │   │   └── secrets.toml
 │   ├── setup/
+│   │   ├── sample_transcripts/
+│   │   │   └── ...
 │   │   └── secrets.toml_setup
 │   └── streamlit_app.py
 ├── .gitignore

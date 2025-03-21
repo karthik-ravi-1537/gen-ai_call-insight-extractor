@@ -1,0 +1,9 @@
+Agent (XYZ Collections - Car Loan Division): Hi, this is Michael from XYZ Collections, Car Loan Division. May I speak with Ms. Patel?
+Customer: This is Ms. Patel.
+Agent: I'm calling about your outstanding car loan payment of $520. Could you let me know when you plan to pay?
+Customer: I'm not in a position to pay on this call, but I commit to paying later today via check.
+Agent: Thank you, Ms. Patel. Could you provide an approximate time?
+Customer: I expect to mail the check by the end of today.
+Agent: Great, I’ve noted your commitment to pay by the end of the day. Your payment status is now set to committed.
+Customer: Thank you.
+Agent: Thank you for your time.

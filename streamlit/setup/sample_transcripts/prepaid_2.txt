@@ -1,0 +1,9 @@
+Agent (XYZ Collections - Home Loan Division): Hello, this is Sarah from XYZ Collections, Home Loan Division. May I speak with Mr. Thompson?
+Customer: Yes, this is Mr. Thompson.
+Agent: I'm reaching out about your home loan payment of $1,200. Our system shows that the payment has already been made.
+Customer: That's correct—I visited my local branch and made a payment last week on Mar 1st.
+Agent: Thank you, Mr. Thompson. Could you tell me which method you used at the branch?
+Customer: I paid in cash at the teller.
+Agent: Excellent. I’ve noted that your payment was prepaid by cash. Thank you for your cooperation.
+Customer: Thank you.
+Agent: Have a great day.

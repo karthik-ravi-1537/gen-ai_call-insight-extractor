@@ -1,0 +1,7 @@
+Agent (XYZ Collections - Home Loan Division): Hello, this is Sarah from XYZ Collections, Home Loan Division. May I speak with Mr. Brown?
+Customer: Yes, this is Mr. Brown.
+Agent: I'm calling regarding your outstanding home loan payment of $1,100. When do you plan to make this payment? Can you process it on this call?
+Customer: I’m not able to pay right now, but I commit to processing the payment tomorrow morning.
+Agent: Thank you, Mr. Brown. I have noted your commitment to pay tomorrow morning. Your payment status is now marked as committed.
+Customer: That works for me.
+Agent: Great. We will follow up if necessary.
