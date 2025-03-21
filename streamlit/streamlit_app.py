@@ -2,6 +2,7 @@ import base64
 
 import streamlit as st
 import requests
+from sample_transcripts_listing import display_sample_transcripts
 
 # Set the backend URL. You can also set this in a secrets.toml file.
 BACKEND_URL = st.secrets.get("BACKEND_URL", "http://localhost:8000")
@@ -130,3 +131,8 @@ if st.button("Check Backend Health"):
             st.error(f"Backend health check failed with status code: {response.status_code}")
     except Exception as e:
         st.error(f"Error performing health check: {str(e)}")
+
+# Sidebar for additional options
+# Sample Transcripts Section
+with st.sidebar.expander("Sample Transcripts", expanded=False):
+    display_sample_transcripts()
