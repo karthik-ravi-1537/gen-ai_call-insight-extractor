@@ -86,18 +86,27 @@ if st.button("Retrieve Summaries"):
                             st.markdown(f"- **File:** {href}", unsafe_allow_html=True)
                             st.markdown("  - **Insights:**")
 
-                            insight_table = f"""
-                            <table>
-                                <tr><th>Payment Status</th><td>{insight.get('payment_status', 'N/A')}</td></tr>
-                                <tr><th>Payment Amount</th><td>{insight.get('payment_amount', 'N/A')}</td></tr>
-                                <tr><th>Payment Date</th><td>{insight.get('payment_date', 'N/A')}</td></tr>
-                                <tr><th>Payment Method</th><td>{insight.get('payment_method', 'N/A')}</td></tr>
-                                <tr><th>Summary Text</th><td>{insight.get('summary_text', 'N/A')}</td></tr>
-                                <tr><th>User Modified Summary</th><td>{insight.get('user_modified_summary', 'N/A')}</td></tr>
-                                <tr><th>LLM Retry Count</th><td>{insight.get('llm_retry_count', 'N/A')}</td></tr>
-                                <tr><th>LLM Redo Required</th><td>{insight.get('llm_redo_required', 'N/A')}</td></tr>
-                            </table>
-                            """
+                            if not insight:
+                                insight_table = """
+                                <table>
+                                    <tr><th colspan="2" style="text-align:center;">Insights are being processed...</th></tr>
+                                    <tr><th>Status</th><td>Processing</td></tr>
+                                    <tr><th>Estimated Time</th><td>30-60 seconds</td></tr>
+                                </table>
+                                """
+                            else:
+                                insight_table = f"""
+                                <table>
+                                    <tr><th>Payment Status</th><td>{insight.get('payment_status', 'N/A')}</td></tr>
+                                    <tr><th>Payment Amount</th><td>{insight.get('payment_amount', 'N/A')}</td></tr>
+                                    <tr><th>Payment Date</th><td>{insight.get('payment_date', 'N/A')}</td></tr>
+                                    <tr><th>Payment Method</th><td>{insight.get('payment_method', 'N/A')}</td></tr>
+                                    <tr><th>Summary Text</th><td>{insight.get('summary_text', 'N/A')}</td></tr>
+                                    <tr><th>User Modified Summary</th><td>{insight.get('user_modified_summary', 'N/A')}</td></tr>
+                                    <tr><th>LLM Retry Count</th><td>{insight.get('llm_retry_count', 'N/A')}</td></tr>
+                                    <tr><th>LLM Redo Required</th><td>{insight.get('llm_redo_required', 'N/A')}</td></tr>
+                                </table>
+                                """
 
                             st.markdown(insight_table, unsafe_allow_html=True)
 
