@@ -1,0 +1,7 @@
+Agent (XYZ Collections - Credit Card Division): Good morning, this is John calling from XYZ Collections, Credit Card Division. May I speak with Mr. Wilson?
+Customer: Yes, this is Mr. Wilson.
+Agent: I'm calling regarding your outstanding credit card payment of $370. Could you let me know when you expect to make this payment?
+Customer: I'm not sure at the moment; I'm still reviewing my finances.
+Agent: I understand. I have marked your payment status as pending. Please inform us when you have a clearer timeframe.
+Customer: I will get back to you soon.
+Agent: Thank you, Mr. Wilson.

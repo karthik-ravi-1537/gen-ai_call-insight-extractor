@@ -1,0 +1,7 @@
+Agent (XYZ Collections - Home Loan Division): Hello, this is Lisa calling from XYZ Collections, Home Loan Division. May I speak with Ms. Garcia?
+Customer: Hi, this is Ms. Garcia.
+Agent: I’m calling regarding your outstanding home loan payment of $1,000. Could you tell me when you might be able to pay?
+Customer: I'm currently unsure. I’m not ready to commit to a payment schedule.
+Agent: Alright, I'll mark your payment status as pending. Please contact us when you have an update.
+Customer: Sure, thank you.
+Agent: Thank you for your time.

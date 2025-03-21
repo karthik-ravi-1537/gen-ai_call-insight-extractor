@@ -1,0 +1,9 @@
+Agent (XYZ Collections - Home Loan Division): Good morning, this is Lisa from XYZ Collections, Home Loan Division. May I speak with Ms. Davis?
+Customer: Yes, this is Ms. Davis.
+Agent: I'm calling regarding your outstanding home loan payment of $950. Are you in a position to process your payment right now on this call?
+Customer: Actually, yes. I can pay right now using my debit card.
+Agent: Thank you, Ms. Davis. Please go ahead, and I’ll verify once the payment is processed.
+Customer: (After a short wait) It’s done—I’ve just completed the transaction.
+Agent: Fantastic. Your payment has been collected during this call. Thank you, Ms. Davis.
+Customer: Thanks for your assistance.
+Agent: You’re welcome. Have a great day.

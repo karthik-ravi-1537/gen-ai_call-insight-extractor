@@ -1,0 +1,9 @@
+Agent (XYZ Collections - Credit Card Division): Good afternoon, this is Alex from XYZ Collections, Credit Card Division. May I speak with Ms. Kim?
+Customer: Hi, this is Ms. Kim.
+Agent: I'm calling regarding your outstanding credit card payment of $480. Could you let me know when you plan to make this payment? Is it possible to pay right now?
+Customer: I’m not able to pay at the moment, but I commit to making the payment later today.
+Agent: Thank you, Ms. Kim. Could you specify an approximate time?
+Customer: I should be able to process the payment by 8:00 PM this evening.
+Agent: Great, I have recorded your commitment to pay by 8:00 PM via credit card. Your payment status is set to committed.
+Customer: Thank you.
+Agent: We appreciate your cooperation.

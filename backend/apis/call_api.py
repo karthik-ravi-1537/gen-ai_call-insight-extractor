@@ -1,6 +1,6 @@
 # apis/call_api.py
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from database import get_db
@@ -40,7 +40,8 @@ async def upload_call(
             file_name=file.filename,
             transcript_text=transcript_text,
             file_content=content.decode("utf-8"),
-            uploaded_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            uploaded_at=datetime.now(timezone.utc),
         )
         db.add(transcript)
     db.commit()
@@ -70,7 +71,7 @@ def redo_call_summary(call_id: str, db: Session = Depends(get_db)):
 @router.get("/summaries")
 def get_summaries(db: Session = Depends(get_db)):
     calls = db.query(Call).all()
-    print(f"Found {len(calls)} calls in the database")
+    # print(f"Found {len(calls)} calls in the database")
 
     summaries = []
     for call in calls:
@@ -80,11 +81,12 @@ def get_summaries(db: Session = Depends(get_db)):
                 insight_data = None
                 if transcript.insight:
                     insight_data = {
-                        "payment_status": transcript.insight.payment_status.name,
+                        "payment_status": transcript.insight.payment_status.value,
                         "payment_amount": str(transcript.insight.payment_amount),
-                        "payment_currency": transcript.insight.payment_currency.name,
+                        "payment_currency": transcript.insight.payment_currency.value,
                         "payment_date": transcript.insight.payment_date.isoformat() if transcript.insight.payment_date else None,
-                        "payment_method": transcript.insight.payment_method,
+                        "payment_method": transcript.insight.payment_method.value,
+                        "comments": transcript.insight.comments,
 
                         "summary_text": transcript.insight.summary_text,
                         "user_modified_summary": transcript.insight.user_modified_summary,
@@ -93,8 +95,6 @@ def get_summaries(db: Session = Depends(get_db)):
                         "llm_redo_required": transcript.insight.llm_redo_required
                     }
 
-                print(transcript.insight.summary_text, transcript.insight.llm_retry_count,
-                      transcript.insight.llm_redo_required)
                 transcripts_list.append({
                     "transcript_id": str(transcript.id),
                     "file_name": transcript.file_name,
@@ -106,7 +106,7 @@ def get_summaries(db: Session = Depends(get_db)):
 
             summary_data = {
                 "call_id": str(call.id),
-                "call_status": call.call_status.value if hasattr(call.call_status, 'value') else str(call.call_status),
+                "call_status": call.call_status.value,
                 "raw_summary": call.raw_summary,
                 "processed_summary": call.processed_summary,
                 "call_llm_retry_count": call.call_llm_retry_count,
