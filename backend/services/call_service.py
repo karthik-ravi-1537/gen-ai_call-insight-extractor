@@ -1,5 +1,6 @@
 # services/call_service.py
 
+import asyncio
 from datetime import datetime, date, timezone
 from typing import Optional
 from uuid import UUID
@@ -11,7 +12,7 @@ from models.insight import Insight
 from sqlalchemy.orm import Session
 
 
-def process_transcripts_for_call(db: Session, call_id: str) -> Call:
+async def process_transcripts_for_call(db: Session, call_id: str) -> Call:
     """
     Process all transcripts in a call by invoking the LLM for each transcript
     and then aggregating their summaries into a call-level summary.
@@ -25,9 +26,9 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
 
     for transcript in call.transcripts:
         if transcript.processed_at is None:
-            llm_data = llm_client.process_transcript(transcript.transcript_text)
+            llm_data = await asyncio.to_thread(llm_client.process_transcript, transcript.transcript_text)
 
-            print(llm_data)
+            # print(llm_data)
 
             payment_date = None
             if llm_data.get("payment_date"):
@@ -69,7 +70,7 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
             transcript.processed_at = datetime.now(timezone.utc)
             db.commit()
 
-    # Aggregate raw summaries from all transcript insights.
+    # Aggregate raw summaries from all transcript insights
     raw_summaries = [
         transcript.insight.summary_text
         for transcript in call.transcripts
@@ -77,13 +78,13 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
     ]
     call.raw_summary = " | ".join(raw_summaries)
 
-    # Optimization: if only one transcript, use its summary directly.
+    # Optimization: if only one transcript, use its summary directly
     if len(call.transcripts) == 1:
         call.processed_summary = raw_summaries[0] if raw_summaries else "No transcript insights available."
         call.call_llm_summary_updated_at = datetime.now(timezone.utc)
     else:
         if call.raw_summary:
-            call.processed_summary = llm_client.process_call_summary(call.raw_summary)
+            call.processed_summary = await asyncio.to_thread(llm_client.process_call_summary, call.raw_summary)
             call.call_llm_summary_updated_at = datetime.now(timezone.utc)
         else:
             call.processed_summary = "No transcript insights available."
@@ -93,7 +94,7 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
     return call
 
 
-def redo_call_summary(db: Session, call_id: str) -> Call:
+async def redo_call_summary(db: Session, call_id: str) -> Call:
     """
     Trigger a manual redo of the call-level summary.
     """
@@ -113,7 +114,7 @@ def redo_call_summary(db: Session, call_id: str) -> Call:
         raise Exception("No transcript summaries available for redo.")
 
     call.raw_summary = " | ".join(raw_summaries)
-    call.processed_summary = llm_client.process_call_summary(call.raw_summary)
+    call.processed_summary = await asyncio.to_thread(llm_client.process_call_summary, call.raw_summary)
     call.call_llm_summary_updated_at = datetime.now(timezone.utc)
     call.call_llm_retry_count += 1
     db.commit()
