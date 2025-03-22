@@ -1,6 +1,8 @@
 import base64
-import streamlit as st
+
 import requests
+import streamlit as st
+
 from sample_transcripts_listing import display_sample_transcripts
 
 # Set the backend URL. You can also set this in a secrets.toml file.
@@ -17,31 +19,38 @@ tab1, tab2, tab3 = st.tabs(["Upload Transcript", "Call Summaries", "Backend Stat
 
 # Tab 1: Upload Transcript
 with tab1:
-    st.header("Upload Transcript File")
+    st.header("Upload Transcript File(s)")
 
-    uploaded_file = st.file_uploader(
-        "Select the transcript file (TXT)",
-        type=["txt"],
-        accept_multiple_files=False
-    )
+    # File uploader that allows multiple files with a limit of 4
+    uploaded_files = st.file_uploader("Select the transcript file(s) (max 4 TXT files)...",
+                                      type=["txt"],
+                                      accept_multiple_files=True)
 
-    if st.button("Upload Call Transcript"):
-        if not uploaded_file:
-            st.warning("No file selected. Please upload a file.")
+    if st.button("Process Transcripts") and uploaded_files:
+        if len(uploaded_files) > 4:
+            st.warning("A maximum of 4 transcripts are permitted per call!")
+        elif len(uploaded_files) == 0:
+            st.warning("No file(s) selected. Please upload a file.")
         else:
-            files = [
-                ("files", (uploaded_file.name, uploaded_file.getvalue(), "text/plain"))
-            ]
-            try:
-                with st.spinner("Uploading file..."):
-                    response = requests.post(f"{API_URL}/apis/calls/upload_call", files=files)
-                if response.status_code == 200:
-                    data = response.json()
-                    st.success("Upload successful! View results in the Call Summaries tab.")
-                else:
-                    st.error(f"Upload failed with status code {response.status_code}")
-            except Exception as e:
-                st.error(f"Error uploading file: {e}")
+            # Create a files list for the multipart request
+            files_list = [("files", (file.name, file.getvalue(), "text/plain"))
+                          for file in uploaded_files]
+
+            with st.spinner('Uploading transcripts...'):
+                try:
+                    response = requests.post(
+                        f"{API_URL}/apis/calls/upload_call",
+                        files=files_list
+                    )
+
+                    if response.status_code == 200:
+                        result = response.json()
+                        st.success(f"Successfully uploaded {len(uploaded_files)} transcript(s)!")
+                        # st.json(result)
+                    else:
+                        st.error(f"Error: {response.status_code} - {response.text}")
+                except Exception as e:
+                    st.error(f"Failed to process transcripts: {str(e)}")
 
 # Tab 2: Call Summaries
 import pandas as pd
@@ -114,7 +123,7 @@ with tab2:
         # Create DataFrame for display
         data = []
         for i, call in enumerate(current_page_summaries, start=start_idx):
-            summary_text = call.get('processed_summary', call.get('raw_summary', 'N/A'))
+            summary_text = call.get('ai_summary', call.get('raw_summary', 'N/A'))
             if summary_text:
                 if len(summary_text) > 100:
                     summary_text = summary_text[:100] + "..."
@@ -197,15 +206,9 @@ with tab2:
         # Display call details
         cols = st.columns(2)
         with cols[0]:
-            st.markdown("**Raw Summary:**")
+            st.markdown("**AI Summary:**")
         with cols[1]:
-            st.markdown(f"{call.get('raw_summary', 'N/A')}")
-
-        cols = st.columns(2)
-        with cols[0]:
-            st.markdown("**Processed Summary:**")
-        with cols[1]:
-            st.markdown(f"{call.get('processed_summary', 'N/A')}")
+            st.markdown(f"{call.get('ai_summary', 'N/A')}")
 
         # Display transcripts
         if call.get("transcripts"):
@@ -236,10 +239,10 @@ with tab2:
 
                     # Additional details
                     with st.expander("Additional Details"):
-                        st.markdown(f"**Summary Text:** {insight.get('summary_text', 'N/A')}")
-                        st.markdown(f"**User Modified Summary:** {insight.get('user_modified_summary', 'N/A')}")
-                        st.markdown(f"**LLM Retry Count:** {insight.get('llm_retry_count', 'N/A')}")
-                        st.markdown(f"**LLM Redo Required:** {insight.get('llm_redo_required', 'N/A')}")
+                        st.markdown(f"**AI Summary:** {insight.get('ai_summary', 'N/A')}")
+                        st.markdown(f"**User Summary:** {insight.get('user_summary', 'N/A')}")
+                        st.markdown(f"**LLM Refinement Required:** {insight.get('llm_refinement_required', 'N/A')}")
+                        st.markdown(f"**LLM Refinement Count:** {insight.get('llm_refinement_count', 'N/A')}")
                 else:
                     st.info("Insights are being processed... (30-60 seconds)")
     else:

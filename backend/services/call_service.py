@@ -1,7 +1,7 @@
 # services/call_service.py
 
+import asyncio
 from datetime import datetime, date, timezone
-from typing import Optional
 from uuid import UUID
 
 import llm_client
@@ -11,12 +11,12 @@ from models.insight import Insight
 from sqlalchemy.orm import Session
 
 
-def process_transcripts_for_call(db: Session, call_id: str) -> Call:
+async def process_call(db: Session, call_id: str) -> Call:
     """
     Process all transcripts in a call by invoking the LLM for each transcript
     and then aggregating their summaries into a call-level summary.
     """
-    call: Optional[Call] = db.query(Call).filter(Call.id == UUID(call_id)).first()
+    call = db.query(Call).filter(Call.id == UUID(call_id)).first()
     if not call:
         raise Exception("Call not found")
 
@@ -25,9 +25,7 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
 
     for transcript in call.transcripts:
         if transcript.processed_at is None:
-            llm_data = llm_client.process_transcript(transcript.transcript_text)
-
-            print(llm_data)
+            llm_data = await asyncio.to_thread(llm_client.process_transcript, transcript.transcript_text)
 
             payment_date = None
             if llm_data.get("payment_date"):
@@ -54,6 +52,18 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
             payment_currency = getattr(PaymentCurrency, llm_data.get("payment_currency", "USD"), PaymentCurrency.USD)
             payment_method = getattr(PaymentMethod, llm_data.get("payment_method", "Cash"), PaymentMethod.CASH)
 
+            current_time = datetime.now(timezone.utc)
+            ai_summary = llm_data.get("ai_summary", "")
+
+            history_entry = {
+                "timestamp": current_time.isoformat(),
+                "ai_summary": ai_summary,
+                "user_summary": "",
+                "refined_summary": "",
+            }
+
+            summary_history = [history_entry]
+
             insight = Insight(
                 transcript_id=transcript.id,
                 payment_status=payment_status,
@@ -61,60 +71,59 @@ def process_transcripts_for_call(db: Session, call_id: str) -> Call:
                 payment_currency=payment_currency,
                 payment_date=payment_date,
                 payment_method=payment_method,
-                summary_text=llm_data.get("summary_text"),
+                ai_summary=ai_summary,
+                ai_summary_updated_at=current_time,
                 comments=comments,
-                llm_summary_updated_at=datetime.now(timezone.utc),
+                summary_history=summary_history,
             )
             db.add(insight)
-            transcript.processed_at = datetime.now(timezone.utc)
+            transcript.processed_at = current_time
             db.commit()
 
-    # Aggregate raw summaries from all transcript insights.
     raw_summaries = [
-        transcript.insight.summary_text
+        transcript.insight.ai_summary
         for transcript in call.transcripts
-        if transcript.insight and transcript.insight.summary_text
+        if transcript.insight and transcript.insight.ai_summary
     ]
-    call.raw_summary = " | ".join(raw_summaries)
 
-    # Optimization: if only one transcript, use its summary directly.
-    if len(call.transcripts) == 1:
-        call.processed_summary = raw_summaries[0] if raw_summaries else "No transcript insights available."
-        call.call_llm_summary_updated_at = datetime.now(timezone.utc)
+    if not raw_summaries:
+        call.raw_summary = ""
+        call.ai_summary = "No transcript insights available!"
+    elif len(call.transcripts) == 1:
+        call.raw_summary = raw_summaries[0]
+        call.ai_summary = raw_summaries[0]
     else:
-        if call.raw_summary:
-            call.processed_summary = llm_client.process_call_summary(call.raw_summary)
-            call.call_llm_summary_updated_at = datetime.now(timezone.utc)
-        else:
-            call.processed_summary = "No transcript insights available."
+        call.raw_summary = " ||| ".join(raw_summaries)
+        call.ai_summary = await asyncio.to_thread(llm_client.process_call_summary, call.raw_summary)
+
+    call.ai_summary_updated_at = datetime.now(timezone.utc)
 
     call.call_status = CallStatus.PROCESSED
     db.commit()
     return call
 
-
-def redo_call_summary(db: Session, call_id: str) -> Call:
-    """
-    Trigger a manual redo of the call-level summary.
-    """
-    call: Optional[Call] = db.query(Call).filter(Call.id == UUID(call_id)).first()
-    if not call:
-        raise Exception("Call not found.")
-
-    if call.call_llm_retry_count >= 20:
-        raise Exception("Maximum call redo attempts reached.")
-
-    raw_summaries = [
-        transcript.insight.summary_text
-        for transcript in call.transcripts
-        if transcript.insight and transcript.insight.summary_text
-    ]
-    if not raw_summaries:
-        raise Exception("No transcript summaries available for redo.")
-
-    call.raw_summary = " | ".join(raw_summaries)
-    call.processed_summary = llm_client.process_call_summary(call.raw_summary)
-    call.call_llm_summary_updated_at = datetime.now(timezone.utc)
-    call.call_llm_retry_count += 1
-    db.commit()
-    return call
+# async def redo_call_summary(db: Session, call_id: str) -> Call:
+#     """
+#     Trigger a manual redo of the call-level summary.
+#     """
+#     call = db.query(Call).filter(Call.id == UUID(call_id)).first()
+#     if not call:
+#         raise Exception("Call not found.")
+#
+#     if call.call_llm_retry_count >= 20:
+#         raise Exception("Maximum call redo attempts reached.")
+#
+#     raw_summaries = [
+#         transcript.insight.ai_summary
+#         for transcript in call.transcripts
+#         if transcript.insight and transcript.insight.ai_summary
+#     ]
+#     if not raw_summaries:
+#         raise Exception("No transcript summaries available for redo.")
+#
+#     call.raw_summary = " | ".join(raw_summaries)
+#     call.ai_summary = await asyncio.to_thread(llm_client.process_call_summary, call.raw_summary)
+#     call.call_llm_summary_updated_at = datetime.now(timezone.utc)
+#     call.call_llm_retry_count += 1
+#     db.commit()
+#     return call

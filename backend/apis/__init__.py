@@ -25,4 +25,7 @@ def register_routes(app: FastAPI):
 
     @app.get("/health")
     def health_check():
-        return {"status": "healthy", "environment": ENVIRONMENT}
+        if ENVIRONMENT not in ["production", "staging", "development"]:
+            return {"status": "error", "message": "Invalid environment"}
+
+        return {"status": "healthy", "environment": ENVIRONMENT.capitalize()}

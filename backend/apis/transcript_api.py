@@ -1,54 +1,65 @@
 # apis/transcript_api.py
-from database import SessionLocal
-from fastapi import APIRouter, HTTPException, Depends
+
+from uuid import UUID
+
+import services.transcript_service as transcript_service
+from database import get_db
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from models.insight import Insight
-from services import transcript_service
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 
-def get_db():
-    db = SessionLocal()
+@router.put("/update_user_summary/{transcript_id}")
+async def update_user_summary(
+        transcript_id: str,
+        request: dict,
+        db: Session = Depends(get_db)
+):
+    user_summary = request.get("user_summary")
+    if not user_summary:
+        raise HTTPException(status_code=400, detail="User summary is required")
+
     try:
-        yield db
-    finally:
-        db.close()
+        insight = db.query(Insight).filter(Insight.transcript_id == UUID(transcript_id)).first()
+        if not insight:
+            raise HTTPException(status_code=404, detail="No insight found for this transcript")
 
-
-@router.get("/insights/{insight_id}")
-def get_insight_detail(insight_id: str, db: Session = Depends(get_db)):
-    insight = db.query(Insight).filter(Insight.id == insight_id).first()
-    if not insight:
-        raise HTTPException(status_code=404, detail="Insight not found")
-    return JSONResponse(content={
-        "insight_id": str(insight.id),
-        "transcript_id": str(insight.transcript_id),
-        "payment_status": insight.payment_status.value,
-        "payment_amount": str(insight.payment_amount) if insight.payment_amount else None,
-        "payment_date": insight.payment_date.isoformat() if insight.payment_date else None,
-        "payment_method": insight.payment_method,
-        "summary_text": insight.summary_text,
-        "llm_summary_updated_at": insight.llm_summary_updated_at.isoformat(),
-        "user_modified_summary": insight.user_modified_summary,
-        "user_summary_updated_at": insight.user_summary_updated_at.isoformat() if insight.user_summary_updated_at else None,
-        "llm_redo_required": insight.llm_redo_required,
-        "llm_retry_count": insight.llm_retry_count,
-        "created_at": insight.created_at.isoformat(),
-        "updated_at": insight.updated_at.isoformat()
-    })
-
-
-@router.post("/redo_transcript_summary/{transcript_id}")
-def redo_transcript_summary(transcript_id: str, db: Session = Depends(get_db)):
-    try:
-        insight = transcript_service.redo_transcript_summary(db, transcript_id)
+        insight = transcript_service.update_user_summary(db, str(insight.id), user_summary)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
     return JSONResponse(content={
-        "message": "Transcript LLM summary updated.",
-        "llm_retry_count": insight.llm_retry_count,
-        "summary_text": insight.summary_text
+        "message": "User summary updated successfully.",
+        "transcript_id": str(insight.transcript_id),
+        "insight_id": str(insight.id),
+        "user_summary": insight.user_summary,
+        "user_summary_updated_at": insight.user_summary_updated_at.isoformat()
+    })
+
+
+@router.post("/generate_refined_summary/{transcript_id}")
+async def generate_refined_summary(
+        transcript_id: str,
+        db: Session = Depends(get_db)
+):
+    try:
+        insight = db.query(Insight).filter(Insight.transcript_id == UUID(transcript_id)).first()
+        if not insight:
+            raise HTTPException(status_code=404, detail="No insight found for this transcript!")
+
+        insight = await transcript_service.generate_refined_summary(db, str(insight.id))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return JSONResponse(content={
+        "message": "Refined summary generated successfully.",
+        "transcript_id": str(insight.transcript_id),
+        "insight_id": str(insight.id),
+        "refined_summary": insight.refined_summary,
+        "refined_summary_updated_at": insight.refined_summary_updated_at.isoformat(),
+        "llm_refinement_count": insight.llm_refinement_count,
+        "llm_refinement_required": insight.llm_refinement_required
     })

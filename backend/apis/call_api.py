@@ -46,7 +46,7 @@ async def upload_call(
         db.add(transcript)
     db.commit()
 
-    background_tasks.add_task(call_service.process_transcripts_for_call, db, str(call.id))
+    background_tasks.add_task(call_service.process_call, db, str(call.id))
 
     return JSONResponse(content={
         "call_id": str(call.id),
@@ -54,18 +54,18 @@ async def upload_call(
     })
 
 
-@router.post("/redo_call_summary/{call_id}")
-def redo_call_summary(call_id: str, db: Session = Depends(get_db)):
-    try:
-        call = call_service.redo_call_summary(db, call_id)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    return JSONResponse(content={
-        "message": "Call-level LLM summary updated.",
-        "call_llm_retry_count": call.call_llm_retry_count,
-        "processed_summary": call.processed_summary
-    })
+# @router.post("/redo_call_summary/{call_id}")
+# async def redo_call_summary(call_id: str, db: Session = Depends(get_db)):
+#     try:
+#         call = await call_service.redo_call_summary(db, call_id)
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+#
+#     return JSONResponse(content={
+#         "message": "Call-level LLM summary updated.",
+#         "call_llm_retry_count": call.call_llm_retry_count,
+#         "ai_summary": call.ai_summary
+#     })
 
 
 @router.get("/summaries")
@@ -88,11 +88,11 @@ def get_summaries(db: Session = Depends(get_db)):
                         "payment_method": transcript.insight.payment_method.value,
                         "comments": transcript.insight.comments,
 
-                        "summary_text": transcript.insight.summary_text,
-                        "user_modified_summary": transcript.insight.user_modified_summary,
+                        "ai_summary": transcript.insight.ai_summary,
+                        "user_summary": transcript.insight.user_summary,
 
-                        "llm_retry_count": transcript.insight.llm_retry_count,
-                        "llm_redo_required": transcript.insight.llm_redo_required
+                        "llm_refinement_count": transcript.insight.llm_refinement_count,
+                        "llm_refinement_required": transcript.insight.llm_refinement_required
                     }
 
                 transcripts_list.append({
@@ -108,8 +108,10 @@ def get_summaries(db: Session = Depends(get_db)):
                 "call_id": str(call.id),
                 "call_status": call.call_status.value,
                 "raw_summary": call.raw_summary,
-                "processed_summary": call.processed_summary,
-                "call_llm_retry_count": call.call_llm_retry_count,
+                "ai_summary": call.ai_summary,
+                "ai_summary_updated_at": call.ai_summary_updated_at.isoformat() if call.ai_summary_updated_at else None,
+                "llm_refinement_required": call.llm_refinement_required,
+                "llm_refinement_count": call.llm_refinement_count,
                 "created_at": call.created_at.isoformat() if call.created_at else None,
                 "updated_at": call.updated_at.isoformat() if call.updated_at else None,
                 "transcripts": transcripts_list
