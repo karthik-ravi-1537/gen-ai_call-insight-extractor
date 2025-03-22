@@ -1,7 +1,7 @@
 # models/transcript.py
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models.base import Base, AuditMixin
 from sqlalchemy import Column, String, Text, DateTime, ForeignKey
@@ -17,7 +17,7 @@ class Transcript(Base, AuditMixin):
     file_name = Column(String, nullable=False)
     transcript_text = Column(Text, nullable=False)
     file_content = Column(Text, nullable=False)
-    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    uploaded_at = Column(DateTime, default=datetime.now(timezone.utc))
     processed_at = Column(DateTime, nullable=True)
 
     call = relationship("Call", back_populates="transcripts")

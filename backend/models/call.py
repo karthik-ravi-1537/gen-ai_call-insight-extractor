@@ -1,7 +1,7 @@
 # models/call.py
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models.base import Base, AuditMixin
 from models.enums import CallStatus
@@ -18,6 +18,6 @@ class Call(Base, AuditMixin):
     processed_summary = Column(Text, nullable=True)
     call_status = Column(Enum(CallStatus), default=CallStatus.UPLOADED, nullable=False)
     call_llm_retry_count = Column(Integer, default=0)
-    call_llm_summary_updated_at = Column(DateTime, default=datetime.utcnow)
+    call_llm_summary_updated_at = Column(DateTime, default=datetime.now(timezone.utc))
 
     transcripts = relationship("Transcript", back_populates="call")

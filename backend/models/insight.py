@@ -1,11 +1,11 @@
 # models/insight.py
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models.base import Base, AuditMixin
 from models.enums import PaymentStatus, PaymentCurrency, PaymentMethod
-from sqlalchemy import Column, Text, DateTime, Numeric, Date, Boolean, Integer, ForeignKey, Enum
+from sqlalchemy import Column, Text, DateTime, Numeric, Date, Boolean, Integer, ForeignKey, Enum, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -23,13 +23,18 @@ class Insight(Base, AuditMixin):
     payment_method = Column(Enum(PaymentMethod), nullable=True)
     comments = Column(Text, nullable=True)
 
-    summary_text = Column(Text, nullable=True)  # LLM-generated summary
-    llm_summary_updated_at = Column(DateTime, default=datetime.utcnow)
+    ai_summary = Column(Text, nullable=True)
+    ai_summary_updated_at = Column(DateTime, default=datetime.now(timezone.utc))
 
-    user_modified_summary = Column(Text, nullable=True)
+    user_summary = Column(Text, nullable=True)
     user_summary_updated_at = Column(DateTime, nullable=True)
 
-    llm_redo_required = Column(Boolean, default=False)
-    llm_retry_count = Column(Integer, default=0)
+    refined_summary = Column(Text, nullable=True)
+    refined_summary_updated_at = Column(DateTime, nullable=True)
+
+    summary_history = Column(JSON, nullable=True)
+
+    llm_refinement_required = Column(Boolean, default=False)
+    llm_refinement_count = Column(Integer, default=0)
 
     transcript = relationship("Transcript", back_populates="insight")

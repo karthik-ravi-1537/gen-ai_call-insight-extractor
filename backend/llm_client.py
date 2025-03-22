@@ -14,6 +14,41 @@ class OpenAIClient:
     def __init__(self):
         self.client = OpenAI(api_key=config.LLM_API_KEY)
 
+    def process_call_summary(self, raw_summary: str) -> str:
+        system_prompt = (
+            "You are an expert call summarization assistant specializing in customer service interactions. "
+            "Your task is to create clear, accurate, and concise summaries that capture key information "
+            "including: main topics discussed, customer concerns, agent responses, and any resolutions or "
+            "action items. Maintain factual accuracy and professional tone."
+        )
+
+        user_prompt = (
+            "Analyze the following call transcript summary and create a refined, professional summary:\n\n"
+            f"{raw_summary}\n\n"
+            "Focus on extracting key information like:\n"
+            "- Main reason for the call\n"
+            "- Important customer details or concerns\n"
+            "- Resolutions or agreements reached\n"
+            "- Any follow-up actions\n\n"
+            "Provide only the final summary without any explanations or meta-commentary."
+        )
+
+        try:
+            response = self.client.chat.completions.create(
+                model=config.LLM_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.2,
+                max_tokens=1024,
+            )
+            processed_summary = response.choices[0].message.content.strip()
+            return processed_summary
+        except Exception as e:
+            print("OpenAI processing error in process_call_summary():", e)
+            return "Fallback processed summary: " + raw_summary
+
     def process_transcript(self, transcript_text: str) -> dict:
         system_prompt = (
             "You are an expert conversation analyzer specializing in financial call transcripts. "
@@ -30,7 +65,7 @@ class OpenAIClient:
             "  - payment_date: In YYYY-MM-DD format\n"
             "  - payment_method: One of [Credit Card, Debit Card, ACH, Check, Cash, Wire Transfer, Other]\n"
             "    If 'Other', format as 'Other - [specific method]'\n"
-            "  - summary_text: A concise summary of the key points in the conversation\n\n"
+            "  - ai_summary: A concise summary of the key points in the conversation\n\n"
             "Transcript:\n"
             f"{transcript_text}\n\n"
             "Return the result in valid JSON format."
@@ -79,7 +114,7 @@ class OpenAIClient:
 
             return data
         except Exception as e:
-            print("OpenAI processing error:", e)
+            print("OpenAI processing error in process_transcript():", e)
             return {
                 "payment_status": "Pending",
                 "payment_amount": None,
@@ -90,40 +125,57 @@ class OpenAIClient:
                 "summary_text": f"Error processing transcript: {str(e)}. This is a fallback response and requires manual review."
             }
 
-    def process_call_summary(self, raw_summary: str) -> str:
-        system_prompt = (
-            "You are an expert call summarization assistant specializing in customer service interactions. "
-            "Your task is to create clear, accurate, and concise summaries that capture key information "
-            "including: main topics discussed, customer concerns, agent responses, and any resolutions or "
-            "action items. Maintain factual accuracy and professional tone."
-        )
+    def generate_refined_summary(self, base_summary: str, user_summary: str) -> str:
+        """
+        Generate a refined summary by combining the base summary with user feedback.
 
-        user_prompt = (
-            "Analyze the following call transcript summary and create a refined, professional summary:\n\n"
-            f"{raw_summary}\n\n"
-            "Focus on extracting key information like:\n"
-            "- Main reason for the call\n"
-            "- Important customer details or concerns\n"
-            "- Resolutions or agreements reached\n"
-            "- Any follow-up actions\n\n"
-            "Provide only the final summary without any explanations or meta-commentary."
-        )
+        Args:
+            base_summary (str): The existing summary (either LLM-generated or previously refined)
+            user_summary (str): The user's modified summary
 
+        Returns:
+            str: The refined summary incorporating user feedback
+        """
         try:
+            prompt = f"""
+                    You are tasked with creating an improved summary of a call transcript.
+            
+                    Here is the original AI-generated summary:
+                    ---
+                    {base_summary}
+                    ---
+            
+                    Here is the human expert's version of the summary:
+                    ---
+                    {user_summary}
+                    ---
+            
+                    Please create a refined summary that:
+                    1. Preserves the important details highlighted by the human expert
+                    2. Maintains good structure and readability from the AI summary
+                    3. Incorporates any factual corrections from the human version
+                    4. Is written in a professional, clear tone suitable for business context
+            
+                    Produce a single cohesive summary paragraph.
+                    """
+
             response = self.client.chat.completions.create(
                 model=config.LLM_MODEL,
                 messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
+                    {"role": "system",
+                     "content": "You are a helpful assistant that refines summaries based on expert feedback."},
+                    {"role": "user", "content": prompt}
                 ],
-                temperature=0.2,
-                max_tokens=1024,
+                temperature=0.0,
+                max_tokens=1024
             )
-            processed_summary = response.choices[0].message.content.strip()
-            return processed_summary
+
+            refined_summary = response.choices[0].message.content.strip()
+            return refined_summary
+
         except Exception as e:
-            print("OpenAI call summary processing error:", e)
-            return "Fallback processed summary: " + raw_summary
+            print(f"OpenAI processing error in generate_refined_summary(): {str(e)}")
+            return "Fallback refined summary: " + base_summary
 
 
 # --- LLM Initialization Function ---
@@ -145,9 +197,13 @@ _client = init_llm()
 
 
 # Module-level functions that delegate to the client instance
+def process_call_summary(raw_summary: str) -> str:
+    return _client.process_call_summary(raw_summary)
+
+
 def process_transcript(transcript_text: str) -> dict:
     return _client.process_transcript(transcript_text)
 
 
-def process_call_summary(raw_summary: str) -> str:
-    return _client.process_call_summary(raw_summary)
+def generate_refined_summary(base_summary: str, user_summary: str) -> str:
+    return _client.generate_refined_summary(base_summary, user_summary)

@@ -46,7 +46,7 @@ async def upload_call(
         db.add(transcript)
     db.commit()
 
-    background_tasks.add_task(call_service.process_transcripts_for_call, db, str(call.id))
+    background_tasks.add_task(call_service.process_call, db, str(call.id))
 
     return JSONResponse(content={
         "call_id": str(call.id),
@@ -54,18 +54,18 @@ async def upload_call(
     })
 
 
-@router.post("/redo_call_summary/{call_id}")
-async def redo_call_summary(call_id: str, db: Session = Depends(get_db)):
-    try:
-        call = await call_service.redo_call_summary(db, call_id)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    return JSONResponse(content={
-        "message": "Call-level LLM summary updated.",
-        "call_llm_retry_count": call.call_llm_retry_count,
-        "processed_summary": call.processed_summary
-    })
+# @router.post("/redo_call_summary/{call_id}")
+# async def redo_call_summary(call_id: str, db: Session = Depends(get_db)):
+#     try:
+#         call = await call_service.redo_call_summary(db, call_id)
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+#
+#     return JSONResponse(content={
+#         "message": "Call-level LLM summary updated.",
+#         "call_llm_retry_count": call.call_llm_retry_count,
+#         "processed_summary": call.processed_summary
+#     })
 
 
 @router.get("/summaries")
@@ -88,11 +88,11 @@ def get_summaries(db: Session = Depends(get_db)):
                         "payment_method": transcript.insight.payment_method.value,
                         "comments": transcript.insight.comments,
 
-                        "summary_text": transcript.insight.summary_text,
-                        "user_modified_summary": transcript.insight.user_modified_summary,
+                        "ai_summary": transcript.insight.ai_summary,
+                        "user_summary": transcript.insight.user_summary,
 
-                        "llm_retry_count": transcript.insight.llm_retry_count,
-                        "llm_redo_required": transcript.insight.llm_redo_required
+                        "llm_refinement_count": transcript.insight.llm_refinement_count,
+                        "llm_refinement_required": transcript.insight.llm_refinement_required
                     }
 
                 transcripts_list.append({

@@ -243,10 +243,10 @@ with tab2:
 
                     # Additional details
                     with st.expander("Additional Details"):
-                        st.markdown(f"**Summary Text:** {insight.get('summary_text', 'N/A')}")
-                        st.markdown(f"**User Modified Summary:** {insight.get('user_modified_summary', 'N/A')}")
-                        st.markdown(f"**LLM Retry Count:** {insight.get('llm_retry_count', 'N/A')}")
-                        st.markdown(f"**LLM Redo Required:** {insight.get('llm_redo_required', 'N/A')}")
+                        st.markdown(f"**AI Summary:** {insight.get('ai_summary', 'N/A')}")
+                        st.markdown(f"**User Summary:** {insight.get('user_summary', 'N/A')}")
+                        st.markdown(f"**LLM Refinement Required:** {insight.get('llm_refinement_required', 'N/A')}")
+                        st.markdown(f"**LLM Refinement Count:** {insight.get('llm_refinement_count', 'N/A')}")
                 else:
                     st.info("Insights are being processed... (30-60 seconds)")
     else:
