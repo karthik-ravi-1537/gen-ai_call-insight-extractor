@@ -73,8 +73,9 @@ with tab2:
             if response.status_code == 200:
                 data = response.json()
                 summaries_list = data.get("summaries", [])
-                summaries_list.reverse()  # Reverse in-place
-                return summaries_list, None, "Summaries refreshed successfully!"
+                enumerated_summaries_list = [(i, summary) for i, summary in enumerate(summaries_list, 1)]
+                enumerated_summaries_list.reverse()  # Reverse to show newest first with correct numbering
+                return enumerated_summaries_list, None, "Summaries refreshed successfully!"
             else:
                 return [], f"Failed to fetch summaries: {response.status_code}", f"Error: Failed to fetch summaries (Status {response.status_code})"
         except Exception as e:
@@ -90,7 +91,7 @@ with tab2:
 
     # Auto-fetch summaries if not loaded or if refresh button is clicked
     if not st.session_state.summaries_loaded or refresh_button:
-        summaries, error, toast_message = fetch_summaries()
+        summaries_list, error, toast_message = fetch_summaries()
 
         # Show toast notification when refresh button is clicked
         if refresh_button:
@@ -102,7 +103,7 @@ with tab2:
         if error:
             st.error(error)
         else:
-            st.session_state.summaries = summaries
+            st.session_state.summaries = summaries_list
             st.session_state.summaries_loaded = True
 
     # Pagination settings
@@ -113,7 +114,7 @@ with tab2:
         st.info("No summaries available.")
     else:
         # Determine total pages
-        total_pages = (len(summaries) + items_per_page - 1) // items_per_page  # Ceiling division
+        total_pages = (len(summaries) + items_per_page - 1) // items_per_page
 
         # Get current page summaries
         start_idx = st.session_state.current_page * items_per_page
@@ -122,7 +123,7 @@ with tab2:
 
         # Create DataFrame for display
         data = []
-        for i, call in enumerate(current_page_summaries, start=start_idx):
+        for index, call in current_page_summaries:
             summary_text = call.get('ai_summary', call.get('raw_summary', 'N/A'))
             if summary_text:
                 if len(summary_text) > 100:
@@ -131,9 +132,9 @@ with tab2:
                 summary_text = "Processing..."
 
             data.append({
-                "Call ID": call.get('call_id', f'#{i + 1}'),
+                "Call ID": str(index),
                 "Status": call.get('call_status', 'N/A'),
-                "Summary": summary_text
+                "AI Summary": summary_text
             })
 
         df = pd.DataFrame(data)
@@ -153,13 +154,13 @@ with tab2:
         st.markdown('<div class="call-table">', unsafe_allow_html=True)
         for i, row in df.iterrows():
             real_idx = i + start_idx
-            cols = st.columns([1, 1, 3, 1])
+            cols = st.columns([0.5, 1, 5, 1])
             with cols[0]:
                 st.write(row["Call ID"])
             with cols[1]:
                 st.write(row["Status"])
             with cols[2]:
-                st.write(row["Summary"])
+                st.write(row["AI Summary"])
             with cols[3]:
                 if st.button("Details", key=f"view_{real_idx}"):
                     st.session_state.selected_call_index = real_idx
@@ -195,19 +196,18 @@ with tab2:
 
         # Add a close button to deselect the call
         col1, col2 = st.columns([5, 1])
+
+        with col1:
+            st.subheader("AI Summary")
+
         with col2:
             if st.button("✕", key="close_details"):
                 st.session_state.selected_call_index = None
                 st.rerun()
 
-        with col1:
-            st.subheader(f"Call {call.get('call_id', '')}")
-
         # Display call details
-        cols = st.columns(2)
+        cols = st.columns(1)
         with cols[0]:
-            st.markdown("**AI Summary:**")
-        with cols[1]:
             st.markdown(f"{call.get('ai_summary', 'N/A')}")
 
         # Display transcripts
