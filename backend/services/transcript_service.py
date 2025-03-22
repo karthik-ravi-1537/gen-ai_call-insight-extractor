@@ -1,6 +1,7 @@
 # services/transcript_service.py
 
 from datetime import datetime, timezone
+from uuid import UUID
 
 import llm_client
 from models.insight import Insight
@@ -8,12 +9,30 @@ from models.transcript import Transcript
 from sqlalchemy.orm import Session
 
 
+def update_user_summary(db: Session, insight_id: str, user_summary: str) -> Insight:
+    """
+    Update the user-modified summary for a transcript insight.
+    This sets a flag indicating that an LLM redo might be required.
+    """
+    insight = db.query(Insight).filter(Insight.id == UUID(insight_id)).first()
+
+    if not insight:
+        raise Exception("Insight not found")
+
+    insight.user_modified_summary = user_summary
+    insight.user_summary_updated_at = datetime.now(timezone.utc)
+    insight.llm_redo_required = True
+
+    db.commit()
+    return insight
+
+
 def redo_transcript_summary(db: Session, transcript_id: str) -> Insight:
     """
     Trigger a manual redo of the LLM summary for a transcript.
     This is only allowed if the user-modified summary is newer than the LLM-generated one.
     """
-    transcript = db.query(Transcript).filter(Transcript.id == transcript_id).first()
+    transcript = db.query(Transcript).filter(Transcript.id == UUID(transcript_id)).first()
     if not transcript or not transcript.insight:
         raise Exception("Transcript or insight not found")
 

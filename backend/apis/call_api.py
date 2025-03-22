@@ -55,9 +55,9 @@ async def upload_call(
 
 
 @router.post("/redo_call_summary/{call_id}")
-def redo_call_summary(call_id: str, db: Session = Depends(get_db)):
+async def redo_call_summary(call_id: str, db: Session = Depends(get_db)):
     try:
-        call = call_service.redo_call_summary(db, call_id)
+        call = await call_service.redo_call_summary(db, call_id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
