@@ -17,7 +17,7 @@ async def process_transcripts_for_call(db: Session, call_id: str) -> Call:
     Process all transcripts in a call by invoking the LLM for each transcript
     and then aggregating their summaries into a call-level summary.
     """
-    call: Optional[Call] = db.query(Call).filter(Call.id == UUID(call_id)).first()
+    call = db.query(Call).filter(Call.id == UUID(call_id)).first()
     if not call:
         raise Exception("Call not found")
 
@@ -27,8 +27,6 @@ async def process_transcripts_for_call(db: Session, call_id: str) -> Call:
     for transcript in call.transcripts:
         if transcript.processed_at is None:
             llm_data = await asyncio.to_thread(llm_client.process_transcript, transcript.transcript_text)
-
-            # print(llm_data)
 
             payment_date = None
             if llm_data.get("payment_date"):
@@ -98,7 +96,7 @@ async def redo_call_summary(db: Session, call_id: str) -> Call:
     """
     Trigger a manual redo of the call-level summary.
     """
-    call: Optional[Call] = db.query(Call).filter(Call.id == UUID(call_id)).first()
+    call = db.query(Call).filter(Call.id == UUID(call_id)).first()
     if not call:
         raise Exception("Call not found.")
 
