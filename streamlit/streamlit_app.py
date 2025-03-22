@@ -1,6 +1,8 @@
 import base64
-import streamlit as st
+
 import requests
+import streamlit as st
+
 from sample_transcripts_listing import display_sample_transcripts
 
 # Set the backend URL. You can also set this in a secrets.toml file.
@@ -121,7 +123,7 @@ with tab2:
         # Create DataFrame for display
         data = []
         for i, call in enumerate(current_page_summaries, start=start_idx):
-            summary_text = call.get('processed_summary', call.get('raw_summary', 'N/A'))
+            summary_text = call.get('ai_summary', call.get('raw_summary', 'N/A'))
             if summary_text:
                 if len(summary_text) > 100:
                     summary_text = summary_text[:100] + "..."
@@ -204,15 +206,9 @@ with tab2:
         # Display call details
         cols = st.columns(2)
         with cols[0]:
-            st.markdown("**Raw Summary:**")
+            st.markdown("**AI Summary:**")
         with cols[1]:
-            st.markdown(f"{call.get('raw_summary', 'N/A')}")
-
-        cols = st.columns(2)
-        with cols[0]:
-            st.markdown("**Processed Summary:**")
-        with cols[1]:
-            st.markdown(f"{call.get('processed_summary', 'N/A')}")
+            st.markdown(f"{call.get('ai_summary', 'N/A')}")
 
         # Display transcripts
         if call.get("transcripts"):

@@ -1,7 +1,6 @@
 # models/insight.py
 
 import uuid
-from datetime import datetime, timezone
 
 from models.base import Base, AuditMixin
 from models.enums import PaymentStatus, PaymentCurrency, PaymentMethod
@@ -24,7 +23,7 @@ class Insight(Base, AuditMixin):
     comments = Column(Text, nullable=True)
 
     ai_summary = Column(Text, nullable=True)
-    ai_summary_updated_at = Column(DateTime, default=datetime.now(timezone.utc))
+    ai_summary_updated_at = Column(DateTime, nullable=True)
 
     user_summary = Column(Text, nullable=True)
     user_summary_updated_at = Column(DateTime, nullable=True)

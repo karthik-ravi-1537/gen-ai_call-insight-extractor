@@ -22,16 +22,36 @@ class OpenAIClient:
             "action items. Maintain factual accuracy and professional tone."
         )
 
-        user_prompt = (
-            "Analyze the following call transcript summary and create a refined, professional summary:\n\n"
-            f"{raw_summary}\n\n"
-            "Focus on extracting key information like:\n"
-            "- Main reason for the call\n"
-            "- Important customer details or concerns\n"
-            "- Resolutions or agreements reached\n"
-            "- Any follow-up actions\n\n"
-            "Provide only the final summary without any explanations or meta-commentary."
-        )
+        # Check if we have multiple summaries
+        if " ||| " in raw_summary:
+            # Split and format the summaries
+            individual_summaries = raw_summary.split(" ||| ")
+            formatted_summaries = "\n\n".join([f"Transcript {i + 1}:\n{summary}"
+                                               for i, summary in enumerate(individual_summaries)])
+
+            user_prompt = (
+                "You have multiple transcript summaries from the same call that need to be combined into "
+                "a single coherent summary. Here are the individual summaries:\n\n"
+                f"{formatted_summaries}\n\n"
+                "Create a unified, comprehensive summary that:\n"
+                "1. Consolidates all key information from each transcript\n"
+                "2. Eliminates redundancies\n"
+                "3. Presents details in a logical flow\n"
+                "4. Maintains a professional tone\n\n"
+                "Provide only the final summary without any explanations or meta-commentary."
+            )
+        else:
+            # Single summary case - use existing logic
+            user_prompt = (
+                "Analyze the following call transcript summary and create a refined, professional summary:\n\n"
+                f"{raw_summary}\n\n"
+                "Focus on extracting key information like:\n"
+                "- Main reason for the call\n"
+                "- Important customer details or concerns\n"
+                "- Resolutions or agreements reached\n"
+                "- Any follow-up actions\n\n"
+                "Provide only the final summary without any explanations or meta-commentary."
+            )
 
         try:
             response = self.client.chat.completions.create(
@@ -43,11 +63,17 @@ class OpenAIClient:
                 temperature=0.2,
                 max_tokens=1024,
             )
-            processed_summary = response.choices[0].message.content.strip()
-            return processed_summary
+            ai_summary = response.choices[0].message.content.strip()
+            return ai_summary
         except Exception as e:
             print("OpenAI processing error in process_call_summary():", e)
-            return "Fallback processed summary: " + raw_summary
+            # For multiple summaries, provide a basic concatenation as fallback
+            if " ||| " in raw_summary:
+                summaries = raw_summary.split(" ||| ")
+                return "Multiple transcript summary (error processing): " + " ".join(
+                    [f"[Transcript {i + 1}] {s[:100]}..." for i, s in enumerate(summaries)]
+                )
+            return "Fallback AI summary: " + raw_summary
 
     def process_transcript(self, transcript_text: str) -> dict:
         system_prompt = (

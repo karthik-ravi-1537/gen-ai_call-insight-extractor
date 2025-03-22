@@ -64,7 +64,7 @@ async def upload_call(
 #     return JSONResponse(content={
 #         "message": "Call-level LLM summary updated.",
 #         "call_llm_retry_count": call.call_llm_retry_count,
-#         "processed_summary": call.processed_summary
+#         "ai_summary": call.ai_summary
 #     })
 
 
@@ -108,8 +108,10 @@ def get_summaries(db: Session = Depends(get_db)):
                 "call_id": str(call.id),
                 "call_status": call.call_status.value,
                 "raw_summary": call.raw_summary,
-                "processed_summary": call.processed_summary,
-                "call_llm_retry_count": call.call_llm_retry_count,
+                "ai_summary": call.ai_summary,
+                "ai_summary_updated_at": call.ai_summary_updated_at.isoformat() if call.ai_summary_updated_at else None,
+                "llm_refinement_required": call.llm_refinement_required,
+                "llm_refinement_count": call.llm_refinement_count,
                 "created_at": call.created_at.isoformat() if call.created_at else None,
                 "updated_at": call.updated_at.isoformat() if call.updated_at else None,
                 "transcripts": transcripts_list

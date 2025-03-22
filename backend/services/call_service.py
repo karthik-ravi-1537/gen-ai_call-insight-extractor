@@ -52,6 +52,18 @@ async def process_call(db: Session, call_id: str) -> Call:
             payment_currency = getattr(PaymentCurrency, llm_data.get("payment_currency", "USD"), PaymentCurrency.USD)
             payment_method = getattr(PaymentMethod, llm_data.get("payment_method", "Cash"), PaymentMethod.CASH)
 
+            current_time = datetime.now(timezone.utc)
+            ai_summary = llm_data.get("ai_summary", "")
+
+            history_entry = {
+                "timestamp": current_time.isoformat(),
+                "ai_summary": ai_summary,
+                "user_summary": "",
+                "refined_summary": "",
+            }
+
+            summary_history = [history_entry]
+
             insight = Insight(
                 transcript_id=transcript.id,
                 payment_status=payment_status,
@@ -59,37 +71,36 @@ async def process_call(db: Session, call_id: str) -> Call:
                 payment_currency=payment_currency,
                 payment_date=payment_date,
                 payment_method=payment_method,
-                ai_summary=llm_data.get("ai_summary"),
-                ai_summary_updated_at=datetime.now(timezone.utc),
+                ai_summary=ai_summary,
+                ai_summary_updated_at=current_time,
                 comments=comments,
+                summary_history=summary_history,
             )
             db.add(insight)
-            transcript.processed_at = datetime.now(timezone.utc)
+            transcript.processed_at = current_time
             db.commit()
 
-    # Aggregate raw summaries from all transcript insights
     raw_summaries = [
         transcript.insight.ai_summary
         for transcript in call.transcripts
         if transcript.insight and transcript.insight.ai_summary
     ]
-    call.raw_summary = " | ".join(raw_summaries)
 
-    # Optimization: if only one transcript, use its summary directly
-    if len(call.transcripts) == 1:
-        call.processed_summary = raw_summaries[0] if raw_summaries else "No transcript insights available."
-        call.call_llm_summary_updated_at = datetime.now(timezone.utc)
+    if not raw_summaries:
+        call.raw_summary = ""
+        call.ai_summary = "No transcript insights available!"
+    elif len(call.transcripts) == 1:
+        call.raw_summary = raw_summaries[0]
+        call.ai_summary = raw_summaries[0]
     else:
-        if call.raw_summary:
-            call.processed_summary = await asyncio.to_thread(llm_client.process_call_summary, call.raw_summary)
-            call.call_llm_summary_updated_at = datetime.now(timezone.utc)
-        else:
-            call.processed_summary = "No transcript insights available."
+        call.raw_summary = " ||| ".join(raw_summaries)
+        call.ai_summary = await asyncio.to_thread(llm_client.process_call_summary, call.raw_summary)
+
+    call.ai_summary_updated_at = datetime.now(timezone.utc)
 
     call.call_status = CallStatus.PROCESSED
     db.commit()
     return call
-
 
 # async def redo_call_summary(db: Session, call_id: str) -> Call:
 #     """
@@ -111,7 +122,7 @@ async def process_call(db: Session, call_id: str) -> Call:
 #         raise Exception("No transcript summaries available for redo.")
 #
 #     call.raw_summary = " | ".join(raw_summaries)
-#     call.processed_summary = await asyncio.to_thread(llm_client.process_call_summary, call.raw_summary)
+#     call.ai_summary = await asyncio.to_thread(llm_client.process_call_summary, call.raw_summary)
 #     call.call_llm_summary_updated_at = datetime.now(timezone.utc)
 #     call.call_llm_retry_count += 1
 #     db.commit()

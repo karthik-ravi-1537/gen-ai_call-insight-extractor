@@ -43,45 +43,36 @@ async def generate_refined_summary(db: Session, insight_id: str) -> Insight:
         if not insight.user_summary:
             raise Exception("No user-modified summary found!")
 
-        # Check if maximum retry limit reached
         if insight.llm_refinement_count >= 5:
             raise Exception("Maximum LLM retry count reached!")
 
-        # Determine base summary for refinement
         base_summary = insight.refined_summary if insight.refined_summary else insight.ai_summary
 
-        # Generate new refined summary
         refined_summary = await asyncio.to_thread(
             llm_client.generate_refined_summary,
             base_summary=base_summary,
             user_summary=insight.user_summary
         )
 
-        # Only proceed with database updates after successful LLM call
         current_time = datetime.now(timezone.utc)
 
-        # Prepare history entry
         history_entry = {
             "timestamp": current_time.isoformat(),
-            "llm_summary": insight.ai_summary,
+            "ai_summary": insight.ai_summary,
             "user_summary": insight.user_summary,
             "refined_summary": insight.refined_summary
         }
 
-        # Initialize summary_history if needed
         if not insight.summary_history:
             insight.summary_history = []
 
-        # Add current entry to history without explicit limitation
         insight.summary_history.append(history_entry)
 
-        # Update insight with new data
         insight.refined_summary = refined_summary
-        insight.refined_at = current_time
+        insight.refined_summary_updated_at = current_time
         insight.llm_refinement_required = False
         insight.llm_refinement_count += 1
 
-        # Commit all changes at once
         db.commit()
         return insight
 
