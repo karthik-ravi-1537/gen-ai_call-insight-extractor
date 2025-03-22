@@ -192,7 +192,7 @@ with tab2:
 
     # Check if a call is selected
     if st.session_state.selected_call_index is not None and 0 <= st.session_state.selected_call_index < len(summaries):
-        call = summaries[st.session_state.selected_call_index]
+        call = summaries[st.session_state.selected_call_index][1]
 
         # Add a close button to deselect the call
         col1, col2 = st.columns([5, 1])
