@@ -63,10 +63,9 @@ async def generate_refined_summary(db: Session, insight_id: str) -> Insight:
             "refined_summary": insight.refined_summary
         }
 
-        if not insight.summary_history:
-            insight.summary_history = []
-
-        insight.summary_history.append(history_entry)
+        current_history = insight.summary_history.copy() if insight.summary_history else []
+        current_history.append(history_entry)
+        insight.summary_history = current_history
 
         insight.refined_summary = refined_summary
         insight.refined_summary_updated_at = current_time
