@@ -22,6 +22,9 @@ gen-ai_call-insight-extractor/
 │   │   ├── __init__.py
 │   │   ├── call_api.py
 │   │   └── transcript_api.py
+│   ├── constants/
+│   │   ├── __init__.py
+│   │   └── constants.py
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── base.py
@@ -53,6 +56,8 @@ gen-ai_call-insight-extractor/
 │   │   └── .env_setup
 │   ├── package.json
 │   └── package-lock.json
+├── notes/
+│   └── NOTES.md
 ├── streamlit/
 │   ├── .streamlit/
 │   │   └── secrets.toml

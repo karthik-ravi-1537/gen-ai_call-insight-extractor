@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 import llm_client
+from constants.constants import MAX_LLM_RETRY_COUNT
 from models.insight import Insight
 from sqlalchemy.orm import Session
 
@@ -38,13 +39,18 @@ async def generate_refined_summary(db: Session, insight_id: str) -> Insight:
         insight = db.query(Insight).filter(Insight.id == UUID(insight_id)).first()
 
         if not insight:
+            logger.error(f"Insight with ID {insight_id} not found")
             raise Exception("Insight not found!")
 
         if not insight.user_summary:
-            raise Exception("No user-modified summary found!")
+            logger.warning(f"No user-modified summary found for insight {insight_id}")
+            return insight
 
-        if insight.llm_refinement_count >= 5:
-            raise Exception("Maximum LLM retry count reached!")
+        if insight.llm_refinement_count >= MAX_LLM_RETRY_COUNT:
+            logger.warning(f"Maximum LLM retry count reached for insight {insight_id}")
+            insight.llm_refinement_required = False
+            db.commit()
+            return insight
 
         base_summary = insight.refined_summary if insight.refined_summary else insight.ai_summary
 
@@ -63,10 +69,9 @@ async def generate_refined_summary(db: Session, insight_id: str) -> Insight:
             "refined_summary": insight.refined_summary
         }
 
-        if not insight.summary_history:
-            insight.summary_history = []
-
-        insight.summary_history.append(history_entry)
+        current_history = insight.summary_history.copy() if insight.summary_history else []
+        current_history.append(history_entry)
+        insight.summary_history = current_history
 
         insight.refined_summary = refined_summary
         insight.refined_summary_updated_at = current_time

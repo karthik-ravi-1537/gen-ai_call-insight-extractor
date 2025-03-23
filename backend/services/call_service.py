@@ -48,9 +48,9 @@ async def process_call(db: Session, call_id: str) -> Call:
                     if comments \
                     else f"Specific Payment Currency: {llm_data.get('payment_currency').split('Other - ')[1]}"
 
-            payment_status = getattr(PaymentStatus, llm_data.get("payment_status", "Pending"), PaymentStatus.PENDING)
-            payment_currency = getattr(PaymentCurrency, llm_data.get("payment_currency", "USD"), PaymentCurrency.USD)
-            payment_method = getattr(PaymentMethod, llm_data.get("payment_method", "Cash"), PaymentMethod.CASH)
+            payment_status = PaymentStatus.from_string(llm_data.get("payment_status", "").capitalize())
+            payment_currency = PaymentCurrency.from_string(llm_data.get("payment_currency", ""))
+            payment_method = PaymentMethod.from_string(llm_data.get("payment_method", ""))
 
             current_time = datetime.now(timezone.utc)
             ai_summary = llm_data.get("ai_summary", "")

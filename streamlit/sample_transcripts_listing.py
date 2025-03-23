@@ -23,8 +23,6 @@ def get_file_download_link(file_path, file_name):
 
 def display_sample_transcripts():
     """Display sample transcripts with download links."""
-    st.subheader("Sample Transcripts")
-
     samples = get_sample_transcripts()
     if not samples:
         st.info("No sample transcripts available.")
