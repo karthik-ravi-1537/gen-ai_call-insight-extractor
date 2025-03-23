@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from config import ENVIRONMENT, loaded_config
-from models.base import Base
+from models.entities.base import Base
 
 config = loaded_config
 

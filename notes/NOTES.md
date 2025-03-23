@@ -129,14 +129,22 @@ with a focus on ease of use, rapid development, and deployment.
 - [X] Address the problem with the download link for transcripts not functioning as expected.
 - [X] Resolve the issue with the health check endpoint not returning the expected status when the backend is down.
 - [X] Make the Call ID on the UI human-readable.
-- [ ] Make all API layer code not call the DB directly. Instead, use the service layer to handle all database
+- [X] Make all API layer code not call the DB directly. Instead, use the Service layer to handle all database
   interactions to maintain a clear separation of concerns and improve code maintainability.
+    - [X] Refactor the API layer to call the Service layer for all database interactions, ensuring a consistent approach
+      across the application.
+    - [X] Perhaps consider introducing Repository layer as well.
 - [ ] Implement thorough logging across the application to capture important events and errors for easier
   debugging and monitoring.
 - [ ] Add a retry mechanism with exponential backoff for the LLM calls to handle transient errors and improve
   resilience. Perhaps extend that to all API calls as well.
-- [ ] Have upload_call API call process_call, and have that call process_transcript to ensure a clear flow of
+- [X] Have upload_call API call process_call, and have that call process_transcript to ensure a clear flow of
   processing from upload to insight extraction.
+    - [X] API -> Service -> Repository flow for all API calls to ensure a consistent approach across the application.
+    - [X] Background Tasks are queues in the API Layer after all Service calls are made to ensure that the processing
+      is done in the background and does not block the API response.
+    - [X] Have the Background Tasks handled in the Service layer to maintain a clear separation of concerns and improve
+      code maintainability.
 - [ ] Have service layer return responses in a consistent format, including success/failure status and any relevant
   messages or data. Currently, it returns objects directly, which can lead to confusions with actual API responses.
     - Example: /generate_refined_summary flow. Service returns Insight, but can return a dict with status and message.

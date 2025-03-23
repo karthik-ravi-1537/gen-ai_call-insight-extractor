@@ -6,14 +6,14 @@ import services.transcript_service as transcript_service
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
-from models.insight import Insight
+from models.entities.insight import Insight
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 
 @router.put("/update_user_summary/{transcript_id}")
-async def update_user_summary(
+def update_user_summary(
         transcript_id: str,
         request: dict,
         db: Session = Depends(get_db)
