@@ -15,7 +15,7 @@ from services import transcript_service
 from sqlalchemy.orm import Session
 
 
-def create_call(
+async def create_call(
         db: Session,
         files: List[UploadFile],
 ) -> Call:
@@ -23,7 +23,7 @@ def create_call(
     call = call_repository.create(db)
 
     for file in files:
-        transcript_service.create_transcript(db, call.id, file)
+        await transcript_service.create_transcript(db, call.id, file)
 
     return call
 
@@ -52,7 +52,7 @@ async def process_call(db: Session, call: Call):
     call.call_status = CallStatus.PROCESSING
     call_repository.save(db, call)
 
-    transcripts = await transcript_service.get_transcripts_by_call_id(db, call.id)
+    transcripts = transcript_service.get_transcripts_by_call_id(db, call.id)
 
     for transcript in transcripts:
         await transcript_service.process_transcript(db, transcript)

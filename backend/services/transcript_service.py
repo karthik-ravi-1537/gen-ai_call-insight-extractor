@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 
-def create_transcript(
+async def create_transcript(
         db: Session,
         call_id: UUID,
         file: UploadFile
@@ -26,7 +26,7 @@ def create_transcript(
     Create a new transcript entry in the database and return it.
     """
     try:
-        content = file.read()
+        content = await file.read()
         transcript_text = content.decode("utf-8")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to read file {file.filename}") from e
@@ -98,7 +98,7 @@ async def process_transcript(db: Session, transcript: Transcript):
 
     summary_history = [history_entry]
 
-    insight = await insight_service.create_insight(
+    insight = insight_service.create_insight(
         db,
         transcript.id,
         payment_status,
