@@ -21,7 +21,7 @@ async def upload_call(
     if len(files) > 4:
         raise HTTPException(status_code=400, detail="A call can have a maximum of 4 transcripts.")
 
-    call = call_service.create_call(db, files)
+    call = await call_service.create_call(db, files)
 
     background_tasks.add_task(call_service.setup_and_initiate_process_call, call.id)
 
