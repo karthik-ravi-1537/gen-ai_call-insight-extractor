@@ -1,11 +1,12 @@
 # services/call_service.py
 
 import asyncio
+import logging
 from datetime import datetime, timezone
 from typing import List
 from uuid import UUID
 
-import llm_client
+from clients import llm_client
 from database import get_db
 from fastapi import UploadFile
 from models.entities.call import Call
@@ -13,6 +14,8 @@ from models.enums import CallStatus
 from repositories import call_repository
 from services import transcript_service
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 
 async def create_call(

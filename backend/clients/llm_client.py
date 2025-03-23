@@ -2,9 +2,8 @@
 
 import json
 
-from openai import OpenAI
-
 from config import loaded_config
+from openai import OpenAI
 
 config = loaded_config
 
@@ -75,7 +74,7 @@ class OpenAIClient:
                 )
             return "Fallback AI summary: " + raw_summary
 
-    def process_transcript(self, transcript_text: str) -> dict:
+    def process_transcript_text(self, transcript_text: str) -> dict:
         system_prompt = (
             "You are an expert conversation analyzer specializing in financial call transcripts. "
             "Extract payment details with precision from customer service interactions. Focus on "
@@ -227,8 +226,8 @@ def process_call_summary(raw_summary: str) -> str:
     return _client.process_call_summary(raw_summary)
 
 
-def process_transcript(transcript_text: str) -> dict:
-    return _client.process_transcript(transcript_text)
+def process_transcript_text(transcript_text: str) -> dict:
+    return _client.process_transcript_text(transcript_text)
 
 
 def generate_refined_summary(base_summary: str, user_summary: str) -> str:
