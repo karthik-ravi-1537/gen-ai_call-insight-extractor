@@ -26,15 +26,23 @@ gen-ai_call-insight-extractor/
 │   │   ├── __init__.py
 │   │   └── constants.py
 │   ├── models/
+│   │   ├── entities/
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py
+│   │   │   ├── call.py
+│   │   │   ├── insight.py
+│   │   │   └── transcript.py
 │   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── enums.py
-│   │   ├── call.py
-│   │   ├── transcript.py
-│   │   └── insight.py
+│   │   └── enums.py
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   ├── call_repository.py
+│   │   ├── insight_repository.py
+│   │   └── transcript_repository.py
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── call_service.py
+│   │   ├── insight_service.py
 │   │   └── transcript_service.py
 │   ├── setup/
 │   │   ├── .env_setup
