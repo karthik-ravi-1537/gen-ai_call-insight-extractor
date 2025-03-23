@@ -22,6 +22,9 @@ gen-ai_call-insight-extractor/
 │   │   ├── __init__.py
 │   │   ├── call_api.py
 │   │   └── transcript_api.py
+│   ├── clients/
+│   │   ├── __init__.py
+│   │   └── llm_client.py
 │   ├── constants/
 │   │   ├── __init__.py
 │   │   └── constants.py
