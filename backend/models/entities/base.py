@@ -1,4 +1,4 @@
-# models/base.py
+# models/entities/base.py
 
 from datetime import datetime, timezone
 

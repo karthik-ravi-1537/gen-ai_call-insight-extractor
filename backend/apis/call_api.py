@@ -1,13 +1,11 @@
 # apis/call_api.py
 
-from datetime import datetime, timezone
 from typing import List
 
 from database import get_db
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
-from models.call import Call
-from models.transcript import Transcript
+from models.entities.call import Call
 from services import call_service
 from sqlalchemy.orm import Session
 
@@ -23,49 +21,14 @@ async def upload_call(
     if len(files) > 4:
         raise HTTPException(status_code=400, detail="A call can have a maximum of 4 transcripts.")
 
-    call = Call()
-    db.add(call)
-    db.commit()
-    db.refresh(call)
+    call = call_service.create_call(db, files)
 
-    for file in files:
-        try:
-            content = await file.read()
-            transcript_text = content.decode("utf-8")
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Failed to read file {file.filename}") from e
-
-        transcript = Transcript(
-            call_id=call.id,
-            file_name=file.filename,
-            transcript_text=transcript_text,
-            file_content=content.decode("utf-8"),
-            created_at=datetime.now(timezone.utc),
-            uploaded_at=datetime.now(timezone.utc),
-        )
-        db.add(transcript)
-    db.commit()
-
-    background_tasks.add_task(call_service.process_call, db, str(call.id))
+    background_tasks.add_task(call_service.setup_and_initiate_process_call, call.id)
 
     return JSONResponse(content={
         "call_id": str(call.id),
         "message": "Call uploaded successfully. Processing in background."
     })
-
-
-# @router.post("/redo_call_summary/{call_id}")
-# async def redo_call_summary(call_id: str, db: Session = Depends(get_db)):
-#     try:
-#         call = await call_service.redo_call_summary(db, call_id)
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e))
-#
-#     return JSONResponse(content={
-#         "message": "Call-level LLM summary updated.",
-#         "call_llm_retry_count": call.call_llm_retry_count,
-#         "ai_summary": call.ai_summary
-#     })
 
 
 @router.get("/summaries")
@@ -90,6 +53,7 @@ def get_summaries(db: Session = Depends(get_db)):
 
                         "ai_summary": transcript.insight.ai_summary,
                         "user_summary": transcript.insight.user_summary,
+                        "refined_summary": transcript.insight.refined_summary,
 
                         "llm_refinement_count": transcript.insight.llm_refinement_count,
                         "llm_refinement_required": transcript.insight.llm_refinement_required

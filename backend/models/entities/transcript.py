@@ -1,19 +1,19 @@
-# models/transcript.py
+# models/entities/transcript.py
 
 import uuid
 from datetime import datetime, timezone
 
-from models.base import Base, AuditMixin
+from models.entities.base import Base, AuditMixin
 from sqlalchemy import Column, String, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 
 class Transcript(Base, AuditMixin):
-    __tablename__ = "transcripts"
+    __tablename__ = "transcript"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    call_id = Column(UUID(as_uuid=True), ForeignKey("calls.id"), nullable=False)
+    call_id = Column(UUID(as_uuid=True), ForeignKey("call.id"), nullable=False)
     file_name = Column(String, nullable=False)
     transcript_text = Column(Text, nullable=False)
     file_content = Column(Text, nullable=False)

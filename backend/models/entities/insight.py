@@ -1,8 +1,8 @@
-# models/insight.py
+# models/entities/insight.py
 
 import uuid
 
-from models.base import Base, AuditMixin
+from models.entities.base import Base, AuditMixin
 from models.enums import PaymentStatus, PaymentCurrency, PaymentMethod
 from sqlalchemy import Column, Text, DateTime, Numeric, Date, Boolean, Integer, ForeignKey, Enum, JSON
 from sqlalchemy.dialects.postgresql import UUID
@@ -10,10 +10,10 @@ from sqlalchemy.orm import relationship
 
 
 class Insight(Base, AuditMixin):
-    __tablename__ = "insights"
+    __tablename__ = "insight"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    transcript_id = Column(UUID(as_uuid=True), ForeignKey("transcripts.id"), nullable=False, unique=True)
+    transcript_id = Column(UUID(as_uuid=True), ForeignKey("transcript.id"), nullable=False, unique=True)
 
     payment_status = Column(Enum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING)
     payment_amount = Column(Numeric(10, 2), nullable=True, default=0.0)
