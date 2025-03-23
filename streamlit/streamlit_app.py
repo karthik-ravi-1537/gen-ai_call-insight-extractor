@@ -1,4 +1,5 @@
 import base64
+import time
 
 import requests
 import streamlit as st
@@ -124,7 +125,7 @@ with tab2:
         # Create DataFrame for display
         data = []
         for index, call in current_page_summaries:
-            summary_text = call.get('ai_summary', call.get('raw_summary', 'N/A'))
+            summary_text = call.get('ai_summary', call.get('raw_summary', 'None'))
             if summary_text:
                 if len(summary_text) > 100:
                     summary_text = summary_text[:100] + "..."
@@ -133,7 +134,7 @@ with tab2:
 
             data.append({
                 "Call ID": str(index),
-                "Status": call.get('call_status', 'N/A'),
+                "Status": call.get('call_status', 'Pending'),
                 "AI Summary": summary_text
             })
 
@@ -208,7 +209,7 @@ with tab2:
         # Display call details
         cols = st.columns(1)
         with cols[0]:
-            st.markdown(f"{call.get('ai_summary', 'N/A')}")
+            st.markdown(f"{call.get('ai_summary', 'None')}")
 
         # Display transcripts
         if call.get("transcripts"):
@@ -217,7 +218,7 @@ with tab2:
                 st.markdown(f"#### Transcript {j + 1}")
 
                 # File download
-                file_name = transcript.get('file_name', 'N/A')
+                file_name = transcript.get('file_name', 'None')
                 file_content = transcript.get('file_content', '')
                 b64_file_content = base64.b64encode(file_content.encode()).decode()
                 href = f'<a href="data:text/plain;base64,{b64_file_content}" download="{file_name}">{file_name}</a>'
@@ -230,19 +231,78 @@ with tab2:
 
                     # Display in table format
                     insight_data = {
-                        "Payment Status": insight.get('payment_status', 'N/A'),
-                        "Payment Amount": insight.get('payment_amount', 'N/A'),
-                        "Payment Date": insight.get('payment_date', 'N/A'),
-                        "Payment Method": insight.get('payment_method', 'N/A')
+                        "Payment Status": insight.get('payment_status', 'None'),
+                        "Payment Amount": insight.get('payment_amount', 'None'),
+                        "Payment Date": insight.get('payment_date', 'None'),
+                        "Payment Method": insight.get('payment_method', 'None')
                     }
                     st.table(insight_data)
 
-                    # Additional details
-                    with st.expander("Additional Details"):
-                        st.markdown(f"**AI Summary:** {insight.get('ai_summary', 'N/A')}")
-                        st.markdown(f"**User Summary:** {insight.get('user_summary', 'N/A')}")
-                        st.markdown(f"**LLM Refinement Required:** {insight.get('llm_refinement_required', 'N/A')}")
-                        st.markdown(f"**LLM Refinement Count:** {insight.get('llm_refinement_count', 'N/A')}")
+                    st.markdown(f"**AI Summary:** {insight.get('ai_summary', 'None')}")
+                    st.markdown(f"**User Summary:** {insight.get('user_summary', 'None')}")
+                    st.markdown(f"**Refined Summary:** {insight.get('refined_summary', 'None')}")
+
+                    # Add user summary form and refinement request button
+                    with st.expander("Transcript Actions", expanded=False):
+                        # User Summary Section
+                        st.markdown("**User Summary**")
+                        current_user_summary = insight.get('user_summary', '')
+                        transcript_id = transcript.get('transcript_id', '')
+
+                        # Create a unique key for this form
+                        form_key = f"user_summary_form_{transcript_id}"
+
+                        with st.form(key=form_key):
+                            new_user_summary = st.text_area(
+                                "Edit User Summary",
+                                value=current_user_summary,
+                                height=100,
+                                key=f"summary_textarea_{transcript_id}"
+                            )
+                            submit_button = st.form_submit_button("Save User Summary")
+
+                            if submit_button:
+                                try:
+                                    # Call API to update user summary
+                                    update_url = f"{API_URL}/apis/transcripts/update_user_summary/{transcript_id}"
+                                    response = requests.put(
+                                        update_url,
+                                        json={"user_summary": new_user_summary}
+                                    )
+
+                                    if response.status_code == 200:
+                                        st.success("User summary updated successfully!")
+                                        # Update local data
+                                        insight['user_summary'] = new_user_summary
+                                        # Refresh the page to show updated data
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Failed to update: {response.text}")
+                                except Exception as e:
+                                    st.error(f"Error: {str(e)}")
+
+                        # LLM Refinement Section
+                        llm_refinement_required = insight.get('llm_refinement_required', False)
+                        if llm_refinement_required:
+                            st.markdown("**LLM Refinement**")
+                            st.info("This transcript needs refinement")
+
+                            if st.button("Request Refined Summary", key=f"refine_{transcript_id}"):
+                                try:
+                                    # Call API to request refinement
+                                    refine_url = f"{API_URL}/apis/transcripts/generate_refined_summary/{transcript_id}"
+                                    with st.spinner("Requesting refined summary..."):
+                                        response = requests.post(refine_url)
+
+                                    if response.status_code == 200:
+                                        st.success("Summary refinement requested successfully!")
+                                        # Refresh the page to show updated data
+                                        time.sleep(1)  # Small delay to ensure backend processing
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Failed to request refinement: {response.text}")
+                                except Exception as e:
+                                    st.error(f"Error: {str(e)}")
                 else:
                     st.info("Insights are being processed... (30-60 seconds)")
     else:
