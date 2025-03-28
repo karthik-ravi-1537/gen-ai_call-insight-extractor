@@ -136,6 +136,7 @@ with a focus on ease of use, rapid development, and deployment.
     - [X] Perhaps consider introducing Repository layer as well.
 - [ ] Implement thorough logging across the application to capture important events and errors for easier
   debugging and monitoring.
+- [ ] Incorporate Unit Tests, and move towards TDD for future development to ensure code quality and reliability.
 - [ ] Add a retry mechanism with exponential backoff for the LLM calls to handle transient errors and improve
   resilience. Perhaps extend that to all API calls as well.
 - [X] Have upload_call API call process_call, and have that call process_transcript to ensure a clear flow of
@@ -170,11 +171,17 @@ with a focus on ease of use, rapid development, and deployment.
     - [X] V4: Advanced features like user summaries.
     - [X] V5: Domain based Data Model refinements.
     - [X] V6: Minor tweaks and bug-fixes.
-    - [ ] V7: Integration of additional LLMs and hot-swapping capabilities.
+    - [ ] V7: Pause and write tests.
+    - [ ] V8: Integration of additional LLMs and hot-swapping capabilities.
 - [X] Review and refine the notes on data to ensure clarity and completeness.
 - [X] Ensure that all sections are well-organized and easy to navigate for future reference.
 - [X] Implement the User Summary feature to allow users to edit the extracted summaries for better accuracy and
   relevance.
+- [ ] Unit Tests.
+    - [ ] Model Tests.
+    - [ ] API Tests.
+    - [ ] Repository Tests.
+    - [ ] Service Tests.
 - [ ] Update the README to reflect any changes made in this document.
 - [ ] Add a flowchart to visualize the different paths (Happy Path, Semi-Happy Path, Unhappy Path, Ignored Path).
 - [ ] Complete System Design diagram.
